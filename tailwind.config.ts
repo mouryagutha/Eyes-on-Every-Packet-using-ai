@@ -81,6 +81,12 @@ export default {
           busy: "rgb(239 68 68)",
           offline: "rgb(156 163 175)",
         },
+        threat: {
+          critical: "rgb(239 68 68)",
+          high: "rgb(249 115 22)",
+          medium: "rgb(245 158 11)",
+          low: "rgb(234 179 8)",
+        },
       },
       fontFamily: {
         sans: ["var(--font-sans)"],
