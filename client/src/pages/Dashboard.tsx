@@ -5,8 +5,11 @@ import { ThreatDistribution } from "@/components/ThreatDistribution";
 import { ThreatEventTable } from "@/components/ThreatEventTable";
 import { IPBlockingPanel } from "@/components/IPBlockingPanel";
 import { Shield, AlertTriangle, Activity, Users } from "lucide-react";
+import { useMetrics } from "@/hooks/useMetrics";
 
 export default function Dashboard() {
+  const { data: metrics, isLoading } = useMetrics();
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <DashboardHeader />
@@ -17,37 +20,34 @@ export default function Dashboard() {
           <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
             <MetricCard
               title="Threats Detected"
-              value="1,247"
+              value={isLoading ? "..." : metrics?.totalThreats.toLocaleString() || "0"}
               icon={AlertTriangle}
-              trend={{ value: 12, direction: "up" }}
               testId="metric-threats"
             />
             <MetricCard
               title="Blocked IPs"
-              value="89"
+              value={isLoading ? "..." : metrics?.blockedIPs || 0}
               icon={Shield}
-              trend={{ value: 5, direction: "down" }}
               testId="metric-blocked"
             />
             <MetricCard
               title="Avg Confidence"
-              value="94.2%"
+              value={isLoading ? "..." : `${metrics?.avgConfidence || 0}%`}
               icon={Activity}
               testId="metric-confidence"
             />
             <MetricCard
               title="Active Sessions"
-              value="342"
+              value={isLoading ? "..." : metrics?.activeSessions || 0}
               icon={Users}
-              trend={{ value: 8, direction: "up" }}
               testId="metric-sessions"
             />
           </div>
 
           {/* Charts Row */}
           <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <ThreatTimeline />
-            <ThreatDistribution />
+            <ThreatTimeline data={metrics?.recentActivity} />
+            <ThreatDistribution data={metrics?.threatsByType} />
           </div>
 
           {/* Threat Events and Blocking Panel */}

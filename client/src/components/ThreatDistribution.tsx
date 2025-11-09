@@ -8,18 +8,41 @@ interface DistributionData {
 }
 
 interface ThreatDistributionProps {
-  //todo: remove mock functionality
-  data?: DistributionData[];
+  data?: Record<string, number>;
 }
 
 export function ThreatDistribution({ data }: ThreatDistributionProps) {
-  //todo: remove mock functionality - replace with real data from backend
-  const distributionData: DistributionData[] = data || [
-    { type: "DoS", count: 145, color: "hsl(0, 84%, 60%)" },
-    { type: "Exploit", count: 89, color: "hsl(30, 90%, 55%)" },
-    { type: "Scan", count: 67, color: "hsl(245, 158, 11%)" },
-    { type: "Brute Force", count: 34, color: "hsl(270, 70%, 60%)" },
-  ];
+  const colorMap: Record<string, string> = {
+    "DoS": "hsl(0, 84%, 60%)",
+    "Exploit": "hsl(30, 90%, 55%)",
+    "Scan": "hsl(245, 158, 11%)",
+    "Brute Force": "hsl(270, 70%, 60%)",
+    "Benign": "hsl(160, 70%, 50%)",
+  };
+
+  const distributionData: DistributionData[] = data
+    ? Object.entries(data).map(([type, count]) => ({
+        type,
+        count,
+        color: colorMap[type] || "hsl(192, 91%, 50%)",
+      }))
+    : [];
+
+  if (distributionData.length === 0) {
+    return (
+      <Card data-testid="card-threat-distribution">
+        <CardHeader>
+          <CardTitle className="text-xl font-semibold">Attack Type Distribution</CardTitle>
+          <p className="text-xs text-muted-foreground">Classification breakdown</p>
+        </CardHeader>
+        <CardContent>
+          <p className="py-8 text-center text-sm text-muted-foreground">
+            No threat data available yet
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const total = distributionData.reduce((sum, item) => sum + item.count, 0);
 

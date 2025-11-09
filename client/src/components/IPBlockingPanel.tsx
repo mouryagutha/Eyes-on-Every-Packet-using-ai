@@ -1,39 +1,24 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { X, Shield, Search } from "lucide-react";
 import { useState } from "react";
+import { useBlockedIPs } from "@/hooks/useBlockedIPs";
 
-interface IPBlockingPanelProps {
-  //todo: remove mock functionality
-  blockedIPs?: string[];
-  onBlock?: (ip: string) => void;
-  onUnblock?: (ip: string) => void;
-}
-
-export function IPBlockingPanel({ blockedIPs, onBlock, onUnblock }: IPBlockingPanelProps) {
+export function IPBlockingPanel() {
+  const { blockedIPs, isLoading, blockIP, unblockIP, isBlocking, isUnblocking } = useBlockedIPs();
   const [ipInput, setIpInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  //todo: remove mock functionality
-  const mockBlockedIPs = blockedIPs || [
-    "192.168.1.105",
-    "172.16.0.88",
-    "198.51.100.72",
-    "203.0.113.45",
-  ];
-
   const handleBlock = () => {
     if (ipInput.trim()) {
-      onBlock?.(ipInput.trim());
-      console.log("Block IP:", ipInput);
+      blockIP({ ipAddress: ipInput.trim(), reason: "Manually blocked" });
       setIpInput("");
     }
   };
 
-  const filteredIPs = mockBlockedIPs.filter(ip => 
-    ip.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredIPs = blockedIPs.filter(ip => 
+    ip.ipAddress.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -52,7 +37,7 @@ export function IPBlockingPanel({ blockedIPs, onBlock, onUnblock }: IPBlockingPa
             className="font-mono"
             data-testid="input-block-ip"
           />
-          <Button onClick={handleBlock} data-testid="button-block-submit">
+          <Button onClick={handleBlock} disabled={isBlocking || !ipInput.trim()} data-testid="button-block-submit">
             <Shield className="h-4 w-4 mr-2" />
             Block
           </Button>
@@ -77,27 +62,30 @@ export function IPBlockingPanel({ blockedIPs, onBlock, onUnblock }: IPBlockingPa
           </div>
           
           <div className="max-h-64 space-y-2 overflow-y-auto">
-            {filteredIPs.map((ip) => (
+            {isLoading && (
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                Loading blocked IPs...
+              </p>
+            )}
+            {!isLoading && filteredIPs.map((blockedIP) => (
               <div
-                key={ip}
+                key={blockedIP.id}
                 className="flex items-center justify-between rounded-md border border-border bg-card p-3 hover-elevate"
-                data-testid={`blocked-ip-${ip}`}
+                data-testid={`blocked-ip-${blockedIP.ipAddress}`}
               >
-                <code className="font-mono text-sm text-foreground">{ip}</code>
+                <code className="font-mono text-sm text-foreground">{blockedIP.ipAddress}</code>
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => {
-                    onUnblock?.(ip);
-                    console.log("Unblock IP:", ip);
-                  }}
-                  data-testid={`button-unblock-${ip}`}
+                  onClick={() => unblockIP(blockedIP.ipAddress)}
+                  disabled={isUnblocking}
+                  data-testid={`button-unblock-${blockedIP.ipAddress}`}
                 >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
             ))}
-            {filteredIPs.length === 0 && (
+            {!isLoading && filteredIPs.length === 0 && (
               <p className="py-8 text-center text-sm text-muted-foreground">
                 No blocked IPs found
               </p>

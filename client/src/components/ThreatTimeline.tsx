@@ -2,7 +2,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useEffect, useRef } from "react";
 
 interface ThreatTimelineProps {
-  //todo: remove mock functionality - replace with real data
   data?: Array<{ time: string; count: number }>;
 }
 
@@ -16,25 +15,29 @@ export function ThreatTimeline({ data }: ThreatTimelineProps) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    //todo: remove mock functionality - this will be replaced with Chart.js
-    const mockData = data || Array.from({ length: 20 }, (_, i) => ({
-      time: `${i}:00`,
-      count: Math.floor(Math.random() * 50) + 10,
-    }));
+    const timelineData = data || [];
 
     const width = canvas.width;
     const height = canvas.height;
     
     ctx.clearRect(0, 0, width, height);
     
-    const maxCount = Math.max(...mockData.map(d => d.count));
-    const xStep = width / (mockData.length - 1);
+    if (timelineData.length === 0) {
+      ctx.fillStyle = "hsl(var(--muted-foreground))";
+      ctx.font = "14px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("No activity data yet", width / 2, height / 2);
+      return;
+    }
+    
+    const maxCount = Math.max(...timelineData.map(d => d.count), 1);
+    const xStep = width / Math.max(timelineData.length - 1, 1);
     
     ctx.strokeStyle = "hsl(192, 91%, 50%)";
     ctx.lineWidth = 2;
     ctx.beginPath();
     
-    mockData.forEach((point, i) => {
+    timelineData.forEach((point, i) => {
       const x = i * xStep;
       const y = height - (point.count / maxCount) * (height - 20);
       if (i === 0) ctx.moveTo(x, y);
